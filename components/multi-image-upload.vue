@@ -1,6 +1,4 @@
 <script setup>
-const rawFiles = ref([]);
-
 // ================ Size Format Convertor ================
 const formatBytes = (bytes, decimals = 2) => {
   if (bytes === 0) return "0 Bytes";
@@ -56,11 +54,29 @@ const drop = (e) => {
 };
 
 // ============= Function to handle file selection =================
-
+const rawFiles = ref([]);
 function handleFile(e) {
   const file = e.target.files;
-  console.log("show file", file);
+  rawFiles.value.push(...file);
+  for (let i = 0; i < rawFiles.value?.length; i++) {
+    // items.value.push(file[i]);
+    // fileName.value = file[i].name;
+    // fileSize.value = file[i].size;
+    console.log("file", rawFiles.value[i]);
+  }
 }
+
+// ============= Function to preview selected files =================
+
+const imagePreviews = computed(() => {
+  return rawFiles.value.map((file) => {
+    return {
+      file: URL.createObjectURL(file),
+      name: file.name,
+      size: file.size,
+    };
+  });
+});
 </script>
 <template>
   <div class="flex flex-col items-center justify-center w-80 h-full">
@@ -141,13 +157,38 @@ function handleFile(e) {
       <input
         ref="input"
         type="file"
-        accept="text/csv"
+        accept="*/"
         @change="handleFile"
         class="hidden"
         multiple
         id="dropzone-file"
       />
     </label>
+
+    <div v-if="rawFiles.length" class="w-full h-full bg-gray-50">
+      <ul class="flex items-center p-1 gap-x-2 overflow-x-auto">
+        <li
+          v-for="(file, index) in imagePreviews"
+          :key="index"
+          class="relative group"
+        >
+          <img
+            :src="file.file"
+            class="max-w-[10rem] max-h-[5rem]"
+            alt="image"
+          />
+          <button
+            @click="rawFiles.splice(index, 1)"
+            class="absolute -top-1 right-0 text-gray-500 group-hover:text-red-500"
+          >
+            <Icon
+              name="carbon:close-filled"
+              class="text-lg group-hover:text-xl duration-300"
+            />
+          </button>
+        </li>
+      </ul>
+    </div>
 
     <div class="w-full" v-if="false">
       <!-- Uploading File Content -->
