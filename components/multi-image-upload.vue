@@ -59,9 +59,6 @@ function handleFile(e) {
   const file = e.target.files;
   rawFiles.value.push(...file);
   for (let i = 0; i < rawFiles.value?.length; i++) {
-    // items.value.push(file[i]);
-    // fileName.value = file[i].name;
-    // fileSize.value = file[i].size;
     console.log("file", rawFiles.value[i]);
   }
 }
@@ -74,9 +71,21 @@ const imagePreviews = computed(() => {
       file: URL.createObjectURL(file),
       name: file.name,
       size: file.size,
+      type: file.type,
     };
   });
 });
+
+function setVideoPoster(event, defaultPoster) {
+  const video = event.target;
+  try {
+    video.currentTime = 1; // Seek to the first second to get a frame
+    video.poster = defaultPoster; // Set the default poster initially
+  } catch (error) {
+    console.error("Error setting video poster:", error);
+    video.poster = "/images/default_poster.png"; // Fallback poster
+  }
+}
 </script>
 <template>
   <div class="flex flex-col items-center justify-center w-80 h-full">
@@ -173,10 +182,33 @@ const imagePreviews = computed(() => {
           class="relative group"
         >
           <img
+            v-if="file.type?.startsWith('image/')"
             :src="file.file"
             class="max-w-[10rem] max-h-[5rem]"
             alt="image"
           />
+          <video
+            v-else-if="file.type?.startsWith('video/')"
+            :src="file.file"
+            class="max-w-[10rem] max-h-[5rem]"
+            alt="video preview"
+            @loadeddata="setVideoPoster($event, '/images/video_thumbnail.png')"
+            @error="setVideoPoster($event, '/images/video_thumbnail.png')"
+          />
+          <Icon
+            name="streamline:convert-pdf-2-solid"
+            class="text-6xl text-gray-400"
+            v-else-if="file.type === 'application/pdf'"
+          />
+          <Icon
+            name="ri:file-excel-2-fill"
+            class="text-6xl text-gray-400"
+            v-else-if="
+              file.type?.includes('excel') ||
+              file.type?.includes('spreadsheetml')
+            "
+          />
+
           <button
             @click="rawFiles.splice(index, 1)"
             class="absolute -top-1 right-0 text-gray-500 group-hover:text-red-500"
