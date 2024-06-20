@@ -1,4 +1,11 @@
 <script setup>
+const props = defineProps({
+  initImage: {
+    type: Array,
+    default: () => [],
+  },
+});
+
 // ================ Size Format Convertor ================
 const formatBytes = (bytes, decimals = 2) => {
   if (bytes === 0) return "0 Bytes";
@@ -58,9 +65,6 @@ const rawFiles = ref([]);
 function handleFile(e) {
   const file = e.target.files;
   rawFiles.value.push(...file);
-  for (let i = 0; i < rawFiles.value?.length; i++) {
-    console.log("file", rawFiles.value[i]);
-  }
 }
 
 // ============= Function to preview selected files =================
@@ -86,9 +90,31 @@ function setVideoPoster(event, defaultPoster) {
     video.poster = "/images/default_poster.png"; // Fallback poster
   }
 }
+
+// ============= Function to fetch init files =================
+
+const { data } = await useFetch("/api/fetch_image", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(props.initImage),
+  onResponse({ response }) {
+    for (const file of response?._data) {
+      try {
+        rawFiles.value.push(URL.createObjectURL(file));
+        console.log("what is this", URL.createObjectURL(file));
+      } catch (error) {
+        console.log("show error", error);
+      }
+    }
+  },
+});
+
 </script>
 <template>
   <div class="flex flex-col items-center justify-center w-80 h-full">
+    {{ rawFiles }}
     <label
       @dragover="dragover"
       @dragleave="dragleave"
